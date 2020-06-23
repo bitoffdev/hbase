@@ -668,7 +668,7 @@ module Hbase
       table_name = TableName.valueOf(table_name_str)
 
       # Get table descriptor
-      tdb = TableDescriptorBuilder.newBuilder(@admin.getTableDescriptor(table_name))
+      tdb = TableDescriptorBuilder.newBuilder(@admin.getDescriptor(table_name))
       hasTableUpdate = false
 
       # Process all args
