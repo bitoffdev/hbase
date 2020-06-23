@@ -509,7 +509,11 @@ module Hbase
       raise(ArgumentError, 'Table must have at least one column family') unless has_columns
 
       # Perform the create table call
-      @admin.createTable(tdb.build, splits)
+      if splits.nil?
+        @admin.createTable(tdb.build)
+      else
+        @admin.createTable(tdb.build, splits)
+      end
     end
 
     #----------------------------------------------------------------------------------------------
