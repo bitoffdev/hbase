@@ -710,14 +710,16 @@ module Hbase
             raise(ArgumentError, 'NAME parameter missing for table_att_unset method') unless name
             if name.is_a?(Array)
               name.each do |key|
-                if tdb.setValue(key, nil).nil?
+                if tdb.build.getValue(key).nil?
                   raise ArgumentError, "Could not find attribute: #{key}"
                 end
+                tdb.setValue(key, nil)
               end
             else
-              if tdb.setValue(name, nil).nil?
+              if tdb.build.getValue(name).nil?
                 raise ArgumentError, "Could not find attribute: #{name}"
               end
+              tdb.setValue(name, nil)
             end
             hasTableUpdate = true
           # Unset table configuration
@@ -725,14 +727,16 @@ module Hbase
             raise(ArgumentError, 'NAME parameter missing for table_conf_unset method') unless name
             if name.is_a?(Array)
               name.each do |key|
-                if tdb.setValue(key, nil).nil?
+                if tdb.build.getValue(key).nil?
                   raise ArgumentError, "Could not find configuration: #{key}"
                 end
+                tdb.setValue(key, nil)
               end
             else
-              if tdb.setValue(name, nil).nil?
+              if tdb.build.getValue(name).nil?
                 raise ArgumentError, "Could not find configuration: #{name}"
               end
+              tdb.setValue(name, nil)
             end
             hasTableUpdate = true
           # Unknown method
