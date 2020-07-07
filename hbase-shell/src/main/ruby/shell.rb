@@ -116,18 +116,15 @@ module Shell
     end
 
     def export_commands(where)
+      # Define each command as a singleton method on jruby's main object. It is critical that these
+      # methods are defined on the instance and not the class.
       ::Shell.commands.keys.each do |cmd|
-        # here where is the IRB namespace
-        # this method just adds the call to the specified command
-        # which just references back to 'this' shell object
-        # a decently extensible way to add commands
-        where.send :instance_eval, <<-EOF
-          def #{cmd}(*args)
-            ret = @shell.command('#{cmd}', *args)
-            puts
-            return ret
-          end
-        EOF
+        where.define_singleton_method(cmd.to_sym) do |*args|
+          ret = @shell.command(cmd, *args)
+          puts
+          return ret
+        end
+
       end
     end
 
