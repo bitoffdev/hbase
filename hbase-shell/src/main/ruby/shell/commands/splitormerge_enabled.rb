@@ -21,7 +21,7 @@ module Shell
     # Command for check split or merge switch status
     class SplitormergeEnabled < Command
       def help
-        print <<-EOF
+        <<-EOF
 Query the switch's state. You can set switch type, 'SPLIT' or 'MERGE'
 Examples:
 
