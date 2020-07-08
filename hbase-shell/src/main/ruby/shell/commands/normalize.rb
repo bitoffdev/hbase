@@ -33,7 +33,9 @@ EOF
       end
 
       def command
-        formatter.row([admin.normalize ? 'true' : 'false'])
+        did_normalize_run = admin.normalize
+        formatter.row([did_normalize_run ? 'true' : 'false'])
+        did_normalize_run
       end
     end
   end

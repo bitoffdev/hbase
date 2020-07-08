@@ -22,7 +22,9 @@ module Shell
     class ClearDeadservers < Command
       def help
         <<-EOF
-          Clear the dead region servers that are never used.
+          Clear the dead region servers that are never used. Returns true if the operation was
+          successful and false if some deadservers could not be cleared.
+
           Examples:
           Clear all dead region servers:
           hbase> clear_deadservers
@@ -40,6 +42,7 @@ module Shell
         servers = admin.clear_deadservers(dead_servers)
         if servers.size <= 0
           formatter.row(['true'])
+          return true
         else
           formatter.row(['Some dead server clear failed'])
           formatter.row(['SERVERNAME'])
@@ -47,6 +50,7 @@ module Shell
             formatter.row([server.toString])
           end
           formatter.footer(servers.size)
+          return false
         end
       end
       # rubocop:enable Metrics/AbcSize
