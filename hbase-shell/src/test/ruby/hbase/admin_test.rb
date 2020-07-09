@@ -104,8 +104,10 @@ module Hbase
     end
 
     define_test 'clear_deadservers should show exact row(s) count' do
-      output = capture_stdout { command(:clear_deadservers, 'test.server.com,16020,1574583397867') }
+      deadservers = []
+      output = capture_stdout { deadservers = command(:clear_deadservers, 'test.server.com,16020,1574583397867') }
       assert(output.include?('1 row(s)'))
+      assert(deadservers[0] == 'test.server.com,16020,1574583397867')
     end
 
     #-------------------------------------------------------------------------------
@@ -196,7 +198,8 @@ module Hbase
       output = capture_stdout { command(:balancer_enabled) }
       assert(output.include?('true'))
 
-      command(:balancer)
+      did_balancer_run = command(:balancer)
+      assert(did_balancer_run == true)
       output = capture_stdout { command(:balancer, 'force') }
       assert(output.include?('true'))
     end
