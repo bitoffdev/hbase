@@ -215,13 +215,15 @@ module Hbase
     #-------------------------------------------------------------------------------
 
     define_test 'snapshot auto cleanup should work' do
-      command(:snapshot_cleanup_switch, true)
+      result = command(:snapshot_cleanup_switch, true)
       output = capture_stdout { command(:snapshot_cleanup_enabled) }
       assert(output.include?('true'))
+      assert(result == true)
 
-      command(:snapshot_cleanup_switch, false)
+      result = command(:snapshot_cleanup_switch, false)
       output = capture_stdout { command(:snapshot_cleanup_enabled) }
       assert(output.include?('false'))
+      assert(result == false)
     end
 
     #-------------------------------------------------------------------------------
