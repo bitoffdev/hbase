@@ -31,8 +31,8 @@ EOF
       end
 
       def command(enableDisable)
-        prev_state = admin.balance_switch(enableDisable) ? 'true' : 'false'
-        formatter.row(["Previous balancer state : #{prev_state}"])
+        prev_state = !!admin.balance_switch(enableDisable)
+        formatter.row(["Previous balancer state : #{prev_state.to_s}"])
         prev_state
       end
     end
