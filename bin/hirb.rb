@@ -143,18 +143,38 @@ require 'shell/formatter'
 @shell = Shell::Shell.new(@hbase, interactive)
 @shell.debug = @shell_debug
 
+##
+# By inheriting from Object, our workspace will still have access to all the methods created by IRB.
+class HBaseReceiver < Object
+  include HBaseConstants
+  include HBaseQuotasConstants
+
+  def get_binding
+    binding
+  end
+end
+
+hbase_receiver = HBaseReceiver.new
+
+require 'irb'
+# Loading in the workspaces extension allows us to use the workspace stack, ie. we can use symbols
+# from multiple workspaces at the same time which is pretty neat!
+require 'irb/ext/workspaces'
+
+$hbase_workspace = IRB::WorkSpace.new(hbase_receiver.get_binding)
+
 # Add commands to this namespace
 # TODO avoid polluting main namespace by using a binding
-@shell.export_commands(self)
+@shell.export_commands_on_object(hbase_receiver)
 
 # Add help command
 def help(command = nil)
-  @shell.help(command)
+  TOPLEVEL_BINDING.receiver.instance_variable_get(:'@shell').help(command)
 end
 
 # Backwards compatibility method
 def tools
-  @shell.help_group('tools')
+  TOPLEVEL_BINDING.receiver.instance_variable_get(:'@shell').help_group('tools')
 end
 
 # Debugging method
@@ -179,7 +199,6 @@ def debug?
 end
 
 # Include hbase constants
-include HBaseConstants
 
 # If script2run, try running it.  If we're in interactive mode, will go on to run the shell unless
 # script calls 'exit' or 'exit 0' or 'exit errcode'.
@@ -207,7 +226,12 @@ if interactive
                HIRB.new
              end
 
+      # hbase_workspace = TOPLEVEL_BINDING.local_variable_get :hbase_workspace
+      hirb.context.push_workspace($hbase_workspace)
+
       @CONF[:IRB_RC].call(hirb.context) if @CONF[:IRB_RC]
+      # Storing our current HBase IRB Context as the main context is imperative for several reasons,
+      # including auto-completion.
       @CONF[:MAIN_CONTEXT] = hirb.context
 
       catch(:IRB_EXIT) do

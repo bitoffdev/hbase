@@ -115,19 +115,22 @@ module Shell
       @rsgroup_admin ||= hbase.rsgroup_admin
     end
 
-    def export_commands(where)
+    ##
+    # Create a class method on the given object for all of the known command classes
+    def export_commands_on_object(target)
+      # store shell_inst in this method's scope so that it can be accessed later in the scope of
+      # the target object
+      shell_inst = self
+      # If target is an instance, get the parent class
+      target = target.class unless target.is_a? Class
+      # Define each method as a lambda. We need to use a lambda (rather than a Proc or block) for
+      # its properties: preservation of local variables and return
       ::Shell.commands.keys.each do |cmd|
-        # here where is the IRB namespace
-        # this method just adds the call to the specified command
-        # which just references back to 'this' shell object
-        # a decently extensible way to add commands
-        where.send :instance_eval, <<-EOF
-          def #{cmd}(*args)
-            ret = @shell.command('#{cmd}', *args)
-            puts
-            return ret
-          end
-        EOF
+        target.send :define_method, cmd.to_sym, lambda { |*args|
+          ret = shell_inst.command("#{cmd}", *args)
+          puts
+          ret
+        }
       end
     end
 
