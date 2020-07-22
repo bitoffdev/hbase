@@ -251,6 +251,13 @@ The HBase shell is the (J)Ruby IRB with the above HBase-specific commands added.
 For more on the HBase Shell, see http://hbase.apache.org/book.html
       HERE
     end
+
+    def create_workspace
+      hbase_receiver = HBaseReceiver.new
+      export_commands(hbase_receiver)
+      workspace = IRB::WorkSpace.new(hbase_receiver.get_binding)
+      workspace
+    end
   end
   # rubocop:enable Metrics/ClassLength
 end

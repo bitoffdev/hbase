@@ -136,35 +136,8 @@ require 'shell'
 # Require formatter
 require 'shell/formatter'
 
-# Setup the HBase module.  Create a configuration.
-@hbase = _configuration.nil? ? Hbase::Hbase.new : Hbase::Hbase.new(_configuration)
+require 'shell/hbase_receiver'
 
-# Setup console
-@shell = Shell::Shell.new(@hbase, interactive)
-@shell.debug = @shell_debug
-
-##
-# By inheriting from Object, our workspace will still have access to all the methods created by IRB.
-class HBaseReceiver < Object
-  include HBaseConstants
-  include HBaseQuotasConstants
-
-  def get_binding
-    binding
-  end
-end
-
-hbase_receiver = HBaseReceiver.new
-
-require 'irb'
-# Loading in the workspaces extension allows us to use the workspace stack, ie. we can use symbols
-# from multiple workspaces at the same time which is pretty neat!
-require 'irb/ext/workspaces'
-
-$hbase_workspace = IRB::WorkSpace.new(hbase_receiver.get_binding)
-
-# Add commands as class methods on HBaseReceiver
-@shell.export_commands(hbase_receiver)
 
 # Debugging method
 def debug
@@ -187,20 +160,20 @@ def debug?
   nil
 end
 
-# Include hbase constants
-
 # If script2run, try running it.  If we're in interactive mode, will go on to run the shell unless
 # script calls 'exit' or 'exit 0' or 'exit errcode'.
 load(script2run) if script2run
 
 if interactive
   # Output a banner message that tells users where to go for help
-  @shell.print_banner
+  # @shell.print_banner
 
   require 'irb'
+  require 'irb/ext/workspaces'
   require 'irb/hirb'
 
   module IRB
+    # Override of the default IRB.start
     def self.start(ap_path = nil)
       $0 = File.basename(ap_path, '.rb') if ap_path
 
@@ -215,8 +188,13 @@ if interactive
                HIRB.new
              end
 
-      # hbase_workspace = TOPLEVEL_BINDING.local_variable_get :hbase_workspace
-      hirb.context.push_workspace($hbase_workspace)
+      cnf = TOPLEVEL_BINDING.local_variable_get :_configuration
+      hbase = cnf.nil? ? Hbase::Hbase.new : Hbase::Hbase.new(cnf)
+      shl = Shell::Shell.new(hbase, true)
+      shl.print_banner
+      # shl.debug = @shell_debug
+      hbase_workspace = shl.create_workspace
+      hirb.context.push_workspace(hbase_workspace)
 
       @CONF[:IRB_RC].call(hirb.context) if @CONF[:IRB_RC]
       # Storing our current HBase IRB Context as the main context is imperative for several reasons,
