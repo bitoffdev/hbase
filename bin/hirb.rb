@@ -163,9 +163,8 @@ require 'irb/ext/workspaces'
 
 $hbase_workspace = IRB::WorkSpace.new(hbase_receiver.get_binding)
 
-# Add commands to this namespace
-# TODO avoid polluting main namespace by using a binding
-@shell.export_commands_on_object(hbase_receiver)
+# Add commands as class methods on HBaseReceiver
+@shell.export_commands(hbase_receiver)
 
 # Add help command
 def help(command = nil)

@@ -19,12 +19,12 @@
 
 require 'hbase_constants'
 
-include HBaseConstants
-
 module Hbase
   # Constructor tests
   class TableConstructorTest < Test::Unit::TestCase
     include TestHelpers
+    include HBaseConstants
+
     def setup
       setup_hbase
     end

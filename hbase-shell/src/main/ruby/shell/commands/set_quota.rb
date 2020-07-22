@@ -20,6 +20,9 @@
 module Shell
   module Commands
     class SetQuota < Command
+      include HBaseConstants
+      include HBaseQuotasConstants
+
       def help
         <<-EOF
 Set a quota for a user, table, namespace or region server.

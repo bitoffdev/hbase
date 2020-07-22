@@ -20,6 +20,8 @@
 module Shell
   module Commands
     class ListRegions < Command
+      include HBaseConstants
+
       def help
         return <<EOF
         List all regions for a particular table as an array and also filter them by server name (optional) as prefix

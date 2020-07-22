@@ -116,8 +116,8 @@ module Shell
     end
 
     ##
-    # Create a class method on the given object for all of the known command classes
-    def export_commands_on_object(target)
+    # Create a class method on the given object for each of the loaded command classes
+    def export_commands(target)
       # store shell_inst in this method's scope so that it can be accessed later in the scope of
       # the target object
       shell_inst = self
