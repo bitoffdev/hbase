@@ -136,8 +136,6 @@ require 'shell'
 # Require formatter
 require 'shell/formatter'
 
-require 'shell/hbase_receiver'
-
 
 # Debugging method
 def debug

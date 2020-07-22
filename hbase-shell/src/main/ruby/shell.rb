@@ -253,6 +253,11 @@ For more on the HBase Shell, see http://hbase.apache.org/book.html
     end
 
     def create_workspace
+      # By requiring hbase_receiver here, we avoid polluting the top-level namespace. Any
+      # optimizations are unnecessary as this function should really only be called once per
+      # process.
+      require 'shell/hbase_receiver'
+
       hbase_receiver = HBaseReceiver.new
       export_commands(hbase_receiver)
       workspace = IRB::WorkSpace.new(hbase_receiver.get_binding)
