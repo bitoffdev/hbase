@@ -23,8 +23,6 @@ java_import org.apache.hadoop.hbase.util.Pair
 
 module Hbase
   class RSGroupAdmin
-    include HBaseConstants
-
     def initialize(connection)
       @connection = connection
       @admin = @connection.getAdmin
