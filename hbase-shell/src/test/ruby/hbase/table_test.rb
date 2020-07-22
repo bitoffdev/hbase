@@ -97,6 +97,7 @@ module Hbase
   # Simple data management methods tests
   class TableSimpleMethodsTest < Test::Unit::TestCase
     include TestHelpers
+    include HBaseConstants
 
     def setup
       setup_hbase
@@ -225,6 +226,7 @@ module Hbase
   # rubocop:disable Metrics/ClassLength
   class TableComplexMethodsTest < Test::Unit::TestCase
     include TestHelpers
+    include HBaseConstants
 
     def setup
       setup_hbase
