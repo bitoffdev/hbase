@@ -118,8 +118,8 @@ module Shell
     ##
     # Create a class method on the given object for each of the loaded command classes
     def export_commands(target)
-      # store shell_inst in this method's scope so that it can be accessed later in the scope of
-      # the target object
+      # We need to store a reference to this Shell instance in the scope of this method so that it
+      # can be accessed later in the scope of the target object.
       shell_inst = self
       # If target is an instance, get the parent class
       target = target.class unless target.is_a? Class
@@ -132,6 +132,16 @@ module Shell
           ret
         }
       end
+      # Export help method
+      target.send :define_method, :help, lambda { |command=nil|
+        shell_inst.help(command)
+        nil
+      }
+      # Export tools method for backwards compatibility
+      target.send :define_method, :tools, lambda {
+        shell_inst.help_group('tools')
+        nil
+      }
     end
 
     def command_instance(command)

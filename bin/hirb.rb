@@ -166,16 +166,6 @@ $hbase_workspace = IRB::WorkSpace.new(hbase_receiver.get_binding)
 # Add commands as class methods on HBaseReceiver
 @shell.export_commands(hbase_receiver)
 
-# Add help command
-def help(command = nil)
-  TOPLEVEL_BINDING.receiver.instance_variable_get(:'@shell').help(command)
-end
-
-# Backwards compatibility method
-def tools
-  TOPLEVEL_BINDING.receiver.instance_variable_get(:'@shell').help_group('tools')
-end
-
 # Debugging method
 def debug
   if @shell_debug
