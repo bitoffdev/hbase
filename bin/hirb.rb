@@ -166,8 +166,6 @@ def debug?
   nil
 end
 
-require 'irb/hirb'
-
 # If script2run, try running it.  If we're in interactive mode, will go on to run the shell unless
 # script calls 'exit' or 'exit 0' or 'exit errcode'.
 shl.eval_io(File.new(script2run)) if script2run
