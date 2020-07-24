@@ -140,7 +140,10 @@ require 'shell/formatter'
 @shell = Shell::Shell.new(@hbase, true)
 @shell.debug = @shell_debug
 
-# Debugging method
+##
+# Toggle shell debugging
+#
+# @return [Boolean] true is debug is turned on after updating the flag
 def debug
   if @shell_debug
     @shell_debug = false
@@ -156,6 +159,8 @@ def debug
   debug?
 end
 
+##
+# Print whether debug is on or off
 def debug?
   puts "Debug mode is #{@shell_debug ? 'ON' : 'OFF'}\n\n"
   nil
