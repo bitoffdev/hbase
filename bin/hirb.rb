@@ -136,10 +136,9 @@ require 'shell'
 # Require formatter
 require 'shell/formatter'
 
-hbase = _configuration.nil? ? Hbase::Hbase.new : Hbase::Hbase.new(_configuration)
-shl = Shell::Shell.new(hbase, true)
-shl.debug = @shell_debug
-hbase_workspace = shl.get_workspace
+@hbase = _configuration.nil? ? Hbase::Hbase.new : Hbase::Hbase.new(_configuration)
+@shell = Shell::Shell.new(@hbase, true)
+@shell.debug = @shell_debug
 
 # Debugging method
 def debug
@@ -173,7 +172,7 @@ shl.eval_io(STDIN) unless interactive
 
 if interactive
   # Output a banner message that tells users where to go for help
-  shl.print_banner
+  @shell.print_banner
 
   require 'irb'
   require 'irb/ext/change-ws'
@@ -195,8 +194,8 @@ if interactive
                HIRB.new
              end
 
-      hbase_workspace = TOPLEVEL_BINDING.local_variable_get :hbase_workspace
-      hirb.context.change_workspace hbase_workspace
+      shl = TOPLEVEL_BINDING.local_variable_get :'@shell'
+      hirb.context.change_workspace shl.get_workspace
 
       @CONF[:IRB_RC].call(hirb.context) if @CONF[:IRB_RC]
       # Storing our current HBase IRB Context as the main context is imperative for several reasons,
