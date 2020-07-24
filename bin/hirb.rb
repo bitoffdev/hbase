@@ -139,7 +139,7 @@ require 'shell/formatter'
 hbase = _configuration.nil? ? Hbase::Hbase.new : Hbase::Hbase.new(_configuration)
 shl = Shell::Shell.new(hbase, true)
 shl.debug = @shell_debug
-hbase_workspace = shl.create_workspace
+hbase_workspace = shl.get_workspace
 
 # Debugging method
 def debug

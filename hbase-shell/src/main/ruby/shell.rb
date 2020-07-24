@@ -265,13 +265,15 @@ For more on the HBase Shell, see http://hbase.apache.org/book.html
       HERE
     end
 
+    @irb_workspace = nil
     ##
-    # Create an IRB Workspace for this shell instance with all the IRB and HBase commands installed.
-    def create_workspace
+    # Returns an IRB Workspace for this shell instance with all the IRB and HBase commands installed
+    def get_workspace
+      return @irb_workspace unless @irb_workspace == nil
       hbase_receiver = HBaseReceiver.new
+      export_commands(hbase_receiver)
       # install all the IRB commands onto our receiver
       IRB::ExtendCommandBundle.extend_object(hbase_receiver)
-      export_commands(hbase_receiver)
       ::IRB::WorkSpace.new(hbase_receiver.get_binding)
     end
 
@@ -286,11 +288,9 @@ For more on the HBase Shell, see http://hbase.apache.org/book.html
       # Mixing HBaseIOExtensions into IO allows us to pass IO objects to RubyLex.
       IO.include HBaseIOExtensions
 
-      workspace = create_workspace
+      workspace = get_workspace
       scanner = RubyLex.new
       scanner.set_input(io)
-
-      last_linenum = 0
 
       begin
         scanner.each_top_level_statement do |statement, linenum|
