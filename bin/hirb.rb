@@ -136,6 +136,10 @@ require 'shell'
 # Require formatter
 require 'shell/formatter'
 
+hbase = _configuration.nil? ? Hbase::Hbase.new : Hbase::Hbase.new(_configuration)
+shl = Shell::Shell.new(hbase, true)
+shl.debug = @shell_debug
+hbase_workspace = shl.create_workspace
 
 # Debugging method
 def debug
@@ -158,16 +162,21 @@ def debug?
   nil
 end
 
+require 'irb/hirb'
+
 # If script2run, try running it.  If we're in interactive mode, will go on to run the shell unless
 # script calls 'exit' or 'exit 0' or 'exit errcode'.
-load(script2run) if script2run
+shl.eval_io(File.new(script2run)) if script2run
+
+# If we are not running interactively, evaluate standard input
+shl.eval_io(STDIN) unless interactive
 
 if interactive
   # Output a banner message that tells users where to go for help
-  # @shell.print_banner
+  shl.print_banner
 
   require 'irb'
-  require 'irb/ext/workspaces'
+  require 'irb/ext/change-ws'
   require 'irb/hirb'
 
   module IRB
@@ -186,13 +195,8 @@ if interactive
                HIRB.new
              end
 
-      cnf = TOPLEVEL_BINDING.local_variable_get :_configuration
-      hbase = cnf.nil? ? Hbase::Hbase.new : Hbase::Hbase.new(cnf)
-      shl = Shell::Shell.new(hbase, true)
-      shl.print_banner
-      # shl.debug = @shell_debug
-      hbase_workspace = shl.create_workspace
-      hirb.context.push_workspace(hbase_workspace)
+      hbase_workspace = TOPLEVEL_BINDING.local_variable_get :hbase_workspace
+      hirb.context.change_workspace hbase_workspace
 
       @CONF[:IRB_RC].call(hirb.context) if @CONF[:IRB_RC]
       # Storing our current HBase IRB Context as the main context is imperative for several reasons,
@@ -206,48 +210,4 @@ if interactive
   end
 
   IRB.start
-else
-  begin
-    # Noninteractive mode: if there is input on stdin, do a simple REPL.
-    # XXX Note that this purposefully uses STDIN and not Kernel.gets
-    #     in order to maintain compatibility with previous behavior where
-    #     a user could pass in script2run and then still pipe commands on
-    #     stdin.
-    require 'irb/ruby-lex'
-    require 'irb/workspace'
-    workspace = IRB::WorkSpace.new(binding)
-    scanner = RubyLex.new
-
-    # RubyLex claims to take an IO but really wants an InputMethod
-    module IOExtensions
-      def encoding
-        external_encoding
-      end
-    end
-    IO.include IOExtensions
-
-    scanner.set_input(STDIN)
-    scanner.each_top_level_statement do |statement, linenum|
-      puts(workspace.evaluate(nil, statement, 'stdin', linenum))
-    end
-  # XXX We're catching Exception on purpose, because we want to include
-  #     unwrapped java exceptions, syntax errors, eval failures, etc.
-  rescue Exception => exception
-    message = exception.to_s
-    # exception unwrapping in shell means we'll have to handle Java exceptions
-    # as a special case in order to format them properly.
-    if exception.is_a? java.lang.Exception
-      warn 'java exception'
-      message = exception.get_message
-    end
-    # Include the 'ERROR' string to try to make transition easier for scripts that
-    # may have already been relying on grepping output.
-    puts "ERROR #{exception.class}: #{message}"
-    if $fullBacktrace
-      # re-raising the will include a backtrace and exit.
-      raise exception
-    else
-      exit 1
-    end
-  end
 end
