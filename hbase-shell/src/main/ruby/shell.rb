@@ -21,8 +21,9 @@ require 'irb/workspace'
 require 'shell/hbase_receiver'
 
 ##
-# HBaseIOExtensions is a module to be "mixed-in" to Ruby's IO class. It is required if you want to
-# use RubyLex with an IO object. RubyLex claims to take an IO but really wants an InputMethod.
+# HBaseIOExtensions is a module to be "mixed-in" (ie. included) to Ruby's IO class. It is required
+# if you want to use RubyLex with an IO object. RubyLex claims to take an IO but really wants an
+# InputMethod.
 module HBaseIOExtensions
   def encoding
     external_encoding
@@ -271,6 +272,8 @@ For more on the HBase Shell, see http://hbase.apache.org/book.html
     def get_workspace
       return @irb_workspace unless @irb_workspace == nil
       hbase_receiver = HBaseReceiver.new
+      # install all the hbase commands BEFORE the irb commands so that our help command is installed
+      # rather than IRB's help command
       export_commands(hbase_receiver)
       # install all the IRB commands onto our receiver
       IRB::ExtendCommandBundle.extend_object(hbase_receiver)
