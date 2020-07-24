@@ -168,10 +168,10 @@ end
 
 # If script2run, try running it.  If we're in interactive mode, will go on to run the shell unless
 # script calls 'exit' or 'exit 0' or 'exit errcode'.
-shl.eval_io(File.new(script2run)) if script2run
+@shell.eval_io(File.new(script2run)) if script2run
 
 # If we are not running interactively, evaluate standard input
-shl.eval_io(STDIN) unless interactive
+@shell.eval_io(STDIN) unless interactive
 
 if interactive
   # Output a banner message that tells users where to go for help
@@ -197,7 +197,7 @@ if interactive
                HIRB.new
              end
 
-      shl = TOPLEVEL_BINDING.local_variable_get :'@shell'
+      shl = TOPLEVEL_BINDING.receiver.instance_variable_get :'@shell'
       hirb.context.change_workspace shl.get_workspace
 
       @CONF[:IRB_RC].call(hirb.context) if @CONF[:IRB_RC]
