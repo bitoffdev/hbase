@@ -604,16 +604,19 @@ EOF
         is_stale |= row.isStale
 
         row.listCells.each do |c|
+          # We explicitly want to use toString rather than toBinaryString here so that non-printable
+          # characters do not get escaped yet.
           family = convert_bytes_with_position(c.getFamilyArray,
-                                               c.getFamilyOffset, c.getFamilyLength, converter_class, converter)
+                                               c.getFamilyOffset, c.getFamilyLength, converter_class, "toString")
           qualifier = convert_bytes_with_position(c.getQualifierArray,
-                                                  c.getQualifierOffset, c.getQualifierLength, converter_class, converter)
+                                                  c.getQualifierOffset, c.getQualifierLength, converter_class, "toString")
 
+          # column may contain non-printable characters
           column = "#{family}:#{qualifier}"
           cell = to_string(column, c, maxlength, converter_class, converter)
 
           if block_given?
-            yield(key, "column=#{column}, #{cell}")
+            yield(key, "column=#{column.dump}, #{cell}")
           else
             res[key] ||= {}
             res[key][column] = cell
