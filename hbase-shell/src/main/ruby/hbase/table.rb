@@ -739,11 +739,15 @@ EOF
       org.apache.hadoop.hbase.TableName::META_TABLE_NAME.equals(@table.getName)
     end
 
-    # Returns family and (when has it) qualifier for a column name
+    # Given a column specification in the format FAMILY[:QUALIFIER[:CONVERTER]]
+    # 1. Save the converter for the given column
+    # 2. Return a 2-element Array with [family, qualifier or nil], discarding the converter if provided
+    #
+    # @param [String] column specification
     def parse_column_name(column)
-      split = org.apache.hadoop.hbase.CellUtil.parseColumn(column.to_java_bytes)
-      set_converter(split) if split.length > 1
-      [split[0], split.length > 1 ? split[1] : nil]
+      spec = parse_column_format_spec(column)
+      set_column_converter(spec.family, spec.qualifier, spec.converter) unless spec.converter.nil?
+      [spec.family, spec.qualifier]
     end
 
     def toISO8601(millis)
@@ -816,16 +820,36 @@ EOF
       eval(converter_class).method(converter_method).call(bytes, offset, len)
     end
 
-    # if the column spec contains CONVERTER information, to get rid of :CONVERTER info from column pair.
-    # 1. return back normal column pair as usual, i.e., "cf:qualifier[:CONVERTER]" to "cf" and "qualifier" only
-    # 2. register the CONVERTER information based on column spec - "cf:qualifier"
-    def set_converter(column)
-      family = String.from_java_bytes(column[0])
-      parts = org.apache.hadoop.hbase.CellUtil.parseColumn(column[1])
-      if parts.length > 1
-        @converters["#{family}:#{String.from_java_bytes(parts[0])}"] = String.from_java_bytes(parts[1])
-        column[1] = parts[0]
+    ##
+    # Parse the column specification for formatting used by shell commands like :scan
+    #
+    # Strings should be structured as follows:
+    #   FAMILY:QUALIFIER[:CONVERTER]
+    # Where:
+    #   - FAMILY is the column family
+    #   - QUALIFIER is the column qualifier. Non-printable characters should be left AS-IS and should NOT BE escaped.
+    #   - CONVERTER is optional and is the name of a converter (like toLong) to apply
+    #
+    # @param [String] column
+    # @return [OpenStruct] with family, qualifier, and converter as Java bytes
+    def parse_column_format_spec(column)
+      split = org.apache.hadoop.hbase.CellUtil.parseColumn(column.to_java_bytes)
+      family = split[0]
+      qualifier = nil
+      converter = nil
+      if split.length > 1
+        parts = org.apache.hadoop.hbase.CellUtil.parseColumn(split[1])
+        qualifier = parts[0]
+        if parts.length > 1
+          converter = parts[1]
+        end
       end
+
+      OpenStruct.new(:family => family, :qualifier => qualifier, :converter => converter)
+    end
+
+    def set_column_converter(family, qualifier, converter)
+      @converters["#{String.from_java_bytes(family)}:#{String.from_java_bytes(qualifier)}"] = String.from_java_bytes(converter)
     end
 
     #----------------------------------------------------------------------------------------------
