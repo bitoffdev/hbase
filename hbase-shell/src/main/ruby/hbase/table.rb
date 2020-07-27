@@ -606,13 +606,11 @@ EOF
         row.listCells.each do |c|
           # Get the family and qualifier of the cell as Ruby strings without escaping non-printable
           # characters.
-          family = convert_bytes_with_position(c.getFamilyArray,
-                                               c.getFamilyOffset, c.getFamilyLength, converter_class, "toString")
-          qualifier = convert_bytes_with_position(c.getQualifierArray,
-                                                  c.getQualifierOffset, c.getQualifierLength, converter_class, "toString")
+          family_bytes =  org.apache.hadoop.hbase.util.Bytes.copy(c.getFamilyArray, c.getFamilyOffset, c.getFamilyLength)
+          qualifier_bytes =  org.apache.hadoop.hbase.util.Bytes.copy(c.getQualifierArray, c.getQualifierOffset, c.getQualifierLength)
 
           # column may contain non-printable characters
-          column = "#{family}:#{qualifier}"
+          column = "#{family_bytes}:#{qualifier_bytes}"
           cell = to_string(column, c, maxlength, converter_class, converter)
 
           # format the column
@@ -620,10 +618,10 @@ EOF
                                                c.getFamilyOffset, c.getFamilyLength, converter_class, converter)
           qualifier = convert_bytes_with_position(c.getQualifierArray,
                                                   c.getQualifierOffset, c.getQualifierLength, converter_class, converter)
-          column = "#{family}:#{qualifier}"
+          formatted_column = "#{family}:#{qualifier}"
 
           if block_given?
-            yield(key, "column=#{column}, #{cell}")
+            yield(key, "column=#{formatted_column}, #{cell}")
           else
             res[key] ||= {}
             res[key][column] = cell
