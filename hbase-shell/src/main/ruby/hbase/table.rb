@@ -457,15 +457,14 @@ EOF
 
         value = to_string(column, c, maxlength, converter_class, converter)
 
-        # Use the FORMATTER to determine how column is printed
-        family = convert_bytes(family_bytes, converter_class, converter)
-        qualifier = convert_bytes(qualifier_bytes, converter_class, converter)
-        formatted_column = "#{family}:#{qualifier}"
-
         if block_given?
+          # Use the FORMATTER to determine how column is printed
+          family = convert_bytes(family_bytes, converter_class, converter)
+          qualifier = convert_bytes(qualifier_bytes, converter_class, converter)
+          formatted_column = "#{family}:#{qualifier}"
           yield(formatted_column, value)
         else
-          res[formatted_column] = value
+          res[column] = value
         end
       end
 
@@ -617,16 +616,15 @@ EOF
 
           cell = to_string(column, c, maxlength, converter_class, converter)
 
-          # Use the FORMATTER to determine how column is printed
-          family = convert_bytes(family_bytes, converter_class, converter)
-          qualifier = convert_bytes(qualifier_bytes, converter_class, converter)
-          formatted_column = "#{family}:#{qualifier}"
-
           if block_given?
+            # Use the FORMATTER to determine how column is printed
+            family = convert_bytes(family_bytes, converter_class, converter)
+            qualifier = convert_bytes(qualifier_bytes, converter_class, converter)
+            formatted_column = "#{family}:#{qualifier}"
             yield(key, "column=#{formatted_column}, #{cell}")
           else
             res[key] ||= {}
-            res[key][formatted_column] = cell
+            res[key][column] = cell
           end
         end
         # One more row processed
