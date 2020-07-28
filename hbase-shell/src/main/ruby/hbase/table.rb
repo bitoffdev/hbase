@@ -820,6 +820,9 @@ EOF
       eval(converter_class).method(converter_method).call(bytes, offset, len)
     end
 
+    # store the information designating what part of a column should be printed, and how
+    ColumnFormatSpec = Struct.new(:family, :qualifier, :converter)
+
     ##
     # Parse the column specification for formatting used by shell commands like :scan
     #
@@ -831,7 +834,7 @@ EOF
     #   - CONVERTER is optional and is the name of a converter (like toLong) to apply
     #
     # @param [String] column
-    # @return [OpenStruct] with family, qualifier, and converter as Java bytes
+    # @return [ColumnFormatSpec] family, qualifier, and converter as Java bytes
     private def parse_column_format_spec(column)
       split = org.apache.hadoop.hbase.CellUtil.parseColumn(column.to_java_bytes)
       family = split[0]
@@ -845,7 +848,7 @@ EOF
         end
       end
 
-      OpenStruct.new(:family => family, :qualifier => qualifier, :converter => converter)
+      ColumnFormatSpec.new(family, qualifier, converter)
     end
 
     private def set_column_converter(family, qualifier, converter)
