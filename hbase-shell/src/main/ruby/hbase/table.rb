@@ -449,14 +449,13 @@ EOF
       # Print out results.  Result can be Cell or RowResult.
       res = {}
       result.listCells.each do |c|
-        value = to_string(c, maxlength, converter_class, converter)
-
         family = convert_bytes_with_position(c.getFamilyArray,
                                              c.getFamilyOffset, c.getFamilyLength, converter_class, converter)
         qualifier = convert_bytes_with_position(c.getQualifierArray,
                                                 c.getQualifierOffset, c.getQualifierLength, converter_class, converter)
 
         column = "#{family}:#{qualifier}"
+        value = to_string(column, c, maxlength, converter_class, converter)
 
         if block_given?
           yield(column, value)
@@ -605,17 +604,24 @@ EOF
         is_stale |= row.isStale
 
         row.listCells.each do |c|
-          cell = to_string(c, maxlength, converter_class, converter)
+          # Get the family and qualifier of the cell as Ruby strings without escaping non-printable
+          # characters.
+          family_bytes =  org.apache.hadoop.hbase.util.Bytes.copy(c.getFamilyArray, c.getFamilyOffset, c.getFamilyLength)
+          qualifier_bytes =  org.apache.hadoop.hbase.util.Bytes.copy(c.getQualifierArray, c.getQualifierOffset, c.getQualifierLength)
+
+          # column may contain non-printable characters
+          column = "#{family_bytes}:#{qualifier_bytes}"
+          cell = to_string(column, c, maxlength, converter_class, converter)
 
           # format the column
           family = convert_bytes_with_position(c.getFamilyArray,
                                                c.getFamilyOffset, c.getFamilyLength, converter_class, converter)
           qualifier = convert_bytes_with_position(c.getQualifierArray,
                                                   c.getQualifierOffset, c.getQualifierLength, converter_class, converter)
-          column = "#{family}:#{qualifier}"
+          formatted_column = "#{family}:#{qualifier}"
 
           if block_given?
-            yield(key, "column=#{column}, #{cell}")
+            yield(key, "column=#{formatted_column}, #{cell}")
           else
             res[key] ||= {}
             res[key][column] = cell
@@ -748,13 +754,7 @@ EOF
 
     # Make a String of the passed kv
     # Intercept cells whose format we know such as the info:regioninfo in hbase:meta
-    #
-    # @param [org.apache.hadoop.hbase.Cell] kv
-    def to_string(kv, maxlength = -1, converter_class = nil, converter = nil)
-      family_bytes =  org.apache.hadoop.hbase.util.Bytes.copy(kv.getFamilyArray, kv.getFamilyOffset, kv.getFamilyLength)
-      qualifier_bytes =  org.apache.hadoop.hbase.util.Bytes.copy(kv.getQualifierArray, kv.getQualifierOffset, kv.getQualifierLength)
-      column = "#{family_bytes}:#{qualifier_bytes}"
-
+    def to_string(column, kv, maxlength = -1, converter_class = nil, converter = nil)
       if is_meta_table?
         if column == 'info:regioninfo' || column == 'info:splitA' || column == 'info:splitB' || \
             column.start_with?('info:merge')
