@@ -832,7 +832,7 @@ EOF
     #
     # @param [String] column
     # @return [OpenStruct] with family, qualifier, and converter as Java bytes
-    def parse_column_format_spec(column)
+    private def parse_column_format_spec(column)
       split = org.apache.hadoop.hbase.CellUtil.parseColumn(column.to_java_bytes)
       family = split[0]
       qualifier = nil
@@ -848,9 +848,28 @@ EOF
       OpenStruct.new(:family => family, :qualifier => qualifier, :converter => converter)
     end
 
-    def set_column_converter(family, qualifier, converter)
+    private def set_column_converter(family, qualifier, converter)
       @converters["#{String.from_java_bytes(family)}:#{String.from_java_bytes(qualifier)}"] = String.from_java_bytes(converter)
     end
+
+    # if the column spec contains CONVERTER information, to get rid of :CONVERTER info from column pair.
+    # 1. return back normal column pair as usual, i.e., "cf:qualifier[:CONVERTER]" to "cf" and "qualifier" only
+    # 2. register the CONVERTER information based on column spec - "cf:qualifier"
+    #
+    # Deprecated for removal in 4.0.0
+    extend Gem::Deprecate
+    deprecate :set_converter, "4.0.0", nil, nil
+    def set_converter(column)
+      family = String.from_java_bytes(column[0])
+      parts = org.apache.hadoop.hbase.CellUtil.parseColumn(column[1])
+      if parts.length > 1
+        @converters["#{family}:#{String.from_java_bytes(parts[0])}"] = String.from_java_bytes(parts[1])
+        column[1] = parts[0]
+      end
+    end
+
+    extend Gem::Deprecate
+    deprecate :set_converter, "4.0.0", nil, nil
 
     #----------------------------------------------------------------------------------------------
     # Get the split points for the table
