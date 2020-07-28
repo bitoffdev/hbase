@@ -449,18 +449,23 @@ EOF
       # Print out results.  Result can be Cell or RowResult.
       res = {}
       result.listCells.each do |c|
-        family = convert_bytes_with_position(c.getFamilyArray,
-                                             c.getFamilyOffset, c.getFamilyLength, converter_class, converter)
-        qualifier = convert_bytes_with_position(c.getQualifierArray,
-                                                c.getQualifierOffset, c.getQualifierLength, converter_class, converter)
+        # Get the family and qualifier of the cell without escaping non-printable characters. It is crucial that
+        # column is constructed in this consistent way to that it can be used as a key.
+        family_bytes =  org.apache.hadoop.hbase.util.Bytes.copy(c.getFamilyArray, c.getFamilyOffset, c.getFamilyLength)
+        qualifier_bytes =  org.apache.hadoop.hbase.util.Bytes.copy(c.getQualifierArray, c.getQualifierOffset, c.getQualifierLength)
+        column = "#{family_bytes}:#{qualifier_bytes}"
 
-        column = "#{family}:#{qualifier}"
         value = to_string(column, c, maxlength, converter_class, converter)
 
+        # Use the FORMATTER to determine how column is printed
+        family = convert_bytes(family_bytes, converter_class, converter)
+        qualifier = convert_bytes(qualifier_bytes, converter_class, converter)
+        formatted_column = "#{family}:#{qualifier}"
+
         if block_given?
-          yield(column, value)
+          yield(formatted_column, value)
         else
-          res[column] = value
+          res[formatted_column] = value
         end
       end
 
@@ -604,27 +609,24 @@ EOF
         is_stale |= row.isStale
 
         row.listCells.each do |c|
-          # Get the family and qualifier of the cell as Ruby strings without escaping non-printable
-          # characters.
+          # Get the family and qualifier of the cell without escaping non-printable characters. It is crucial that
+          # column is constructed in this consistent way to that it can be used as a key.
           family_bytes =  org.apache.hadoop.hbase.util.Bytes.copy(c.getFamilyArray, c.getFamilyOffset, c.getFamilyLength)
           qualifier_bytes =  org.apache.hadoop.hbase.util.Bytes.copy(c.getQualifierArray, c.getQualifierOffset, c.getQualifierLength)
-
-          # column may contain non-printable characters
           column = "#{family_bytes}:#{qualifier_bytes}"
+
           cell = to_string(column, c, maxlength, converter_class, converter)
 
-          # format the column
-          family = convert_bytes_with_position(c.getFamilyArray,
-                                               c.getFamilyOffset, c.getFamilyLength, converter_class, converter)
-          qualifier = convert_bytes_with_position(c.getQualifierArray,
-                                                  c.getQualifierOffset, c.getQualifierLength, converter_class, converter)
+          # Use the FORMATTER to determine how column is printed
+          family = convert_bytes(family_bytes, converter_class, converter)
+          qualifier = convert_bytes(qualifier_bytes, converter_class, converter)
           formatted_column = "#{family}:#{qualifier}"
 
           if block_given?
             yield(key, "column=#{formatted_column}, #{cell}")
           else
             res[key] ||= {}
-            res[key][column] = cell
+            res[key][formatted_column] = cell
           end
         end
         # One more row processed
