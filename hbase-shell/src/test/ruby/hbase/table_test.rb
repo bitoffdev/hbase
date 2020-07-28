@@ -237,7 +237,7 @@ module Hbase
       @test_ts = 12345678
       @test_table.put(1, "x:a", 1)
       @test_table.put(1, "x:b", 2, @test_ts)
-      @test_table.put(1, 'x:\x11', [921].pack("N"))
+      @test_table.put(1, "x:\x11", [921].pack("N"))
 
       @test_table.put(2, "x:a", 11)
       @test_table.put(2, "x:b", 12, @test_ts)
@@ -728,7 +728,7 @@ module Hbase
         assert_kind_of(Hash, res)
         assert_match(/value=1024/, res['1']['x:c'])
         assert_match(/value=98/, res['1']['x:d'])
-        assert_match(/value=712/, res['1']["x:\x11"])
+        assert_match(/value=712/, res['1']['x:\x11'])
       ensure
         # clean up newly added columns for this test only.
         @test_table.deleteall(1, 'x:c')

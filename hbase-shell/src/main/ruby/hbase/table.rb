@@ -857,8 +857,6 @@ EOF
     # 2. register the CONVERTER information based on column spec - "cf:qualifier"
     #
     # Deprecated for removal in 4.0.0
-    extend Gem::Deprecate
-    deprecate :set_converter, "4.0.0", nil, nil
     def set_converter(column)
       family = String.from_java_bytes(column[0])
       parts = org.apache.hadoop.hbase.CellUtil.parseColumn(column[1])
@@ -867,7 +865,6 @@ EOF
         column[1] = parts[0]
       end
     end
-
     extend Gem::Deprecate
     deprecate :set_converter, "4.0.0", nil, nil
 
