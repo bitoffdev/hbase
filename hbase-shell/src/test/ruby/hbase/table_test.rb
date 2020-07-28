@@ -237,7 +237,7 @@ module Hbase
       @test_ts = 12345678
       @test_table.put(1, "x:a", 1)
       @test_table.put(1, "x:b", 2, @test_ts)
-      @test_table.put(1, "x:\x11", [921].pack("N"))
+      @test_table.put(1, 'x:\x11', [921].pack("N"))
 
       @test_table.put(2, "x:a", 11)
       @test_table.put(2, "x:b", 12, @test_ts)
@@ -335,7 +335,7 @@ module Hbase
       res = @test_table._get_internal('1', COLUMN => [ "x:\x11", 'x:a', 'x:b' ])
       assert_not_nil(res)
       assert_kind_of(Hash, res)
-      assert_not_nil(res["x:\x11"])
+      assert_not_nil(res['x:\x11'])
       assert_not_nil(res['x:a'])
       assert_not_nil(res['x:b'])
     end
@@ -360,12 +360,12 @@ module Hbase
       res = @test_table._get_internal('1', COLUMNS => [ "x:\x11" ])
       assert_not_nil(res)
       assert_kind_of(Hash, res)
-      assert_match(/value=\\x00\\x00\\x03\\x99/, res[ "x:\x11" ])
+      assert_match(/value=\\x00\\x00\\x03\\x99/, res[ 'x:\x11' ])
 
       res = @test_table._get_internal('1', COLUMNS => [ "x:\x11:toInt" ])
       assert_not_nil(res)
       assert_kind_of(Hash, res)
-      assert_match(/value=921/, res[ "x:\x11" ])
+      assert_match(/value=921/, res[ 'x:\x11' ])
     end
 
     define_test "get should work with hash columns spec and TIMESTAMP only" do
